@@ -1,36 +1,46 @@
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <string.h>
+#include <pthread.h>
 #include <stdio.h>
 
-#define NAMEDPIPE_NAME "/tmp/my_named_pipe"
-#define BUFSIZE        50
+int count; 
+int atoi(const char *nptr);
+void *potok(void *param); 
 
-int main (int argc, char ** argv) {
-    int fd, len;
-    char buf[BUFSIZE];
+int main(int argc, char *argv[])
+{
+  pthread_t tid; 
+  pthread_attr_t attr; 
 
-    if ( mkfifo(NAMEDPIPE_NAME, 0777) ) {
-        perror("mkfifo");
-        return 1;
-    }
-    printf("%s is created\n", NAMEDPIPE_NAME);
-
-    if ( (fd = open(NAMEDPIPE_NAME, O_RDONLY)) <= 0 ) {
-        perror("open");
-        return 1;
-    }
-    printf("%s is opened\n", NAMEDPIPE_NAME);
-
-    do {
-        memset(buf, '\0', BUFSIZE);
-        if ( (len = read(fd, buf, BUFSIZE-1)) <= 0 ) {
-            perror("read");
-            close(fd);
-            remove(NAMEDPIPE_NAME);
-            return 0;
-        }
-        printf("Incomming message (%d): %s\n", len, buf);
-    } while ( 1 );
+if (argc != 2) {
+  fprintf(stderr,"usage: progtest <integer value>\n");
+  return -1;
 }
-   
+
+if (atoi(argv[1]) < 0) {
+  fprintf(stderr,"Аргумент %d не может быть отрицательным числом\n",atoi(argv[1]));
+  return -1;
+}
+
+
+  pthread_attr_init(&attr);
+
+
+  pthread_create(&tid,&attr,potok,argv[1]);
+
+
+  pthread_join(tid,NULL);
+  printf("count = %d\n",count);
+}
+
+
+void *potok(void *param) 
+{
+  int i, upper = atoi(param);
+  count = 0;
+
+  if (upper > 0) {
+    for (i = 1; i <= upper; i++)
+    count += i;
+  }
+
+  pthread_exit(0);
+}
