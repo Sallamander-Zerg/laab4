@@ -1,46 +1,38 @@
-#include <pthread.h>
-#include <stdio.h>
+#include <fcntl.h>
+    #include <sys/stat.h>
+    #include <semaphore.h>
+    #include <stdio.h>
 
-int count; 
-int atoi(const char *nptr);
-void *potok(void *param); 
+    #define SEM "/my_named_semaphore"
+    void log(FILE *f){
+    fprintf(f, "Logging by process with id %d\n", getpid());
+    }
 
-int main(int argc, char *argv[])
-{
-  pthread_t tid; 
-  pthread_attr_t attr; 
+    int main(int argc, char ** argv) {
+    sem_t *sem;
+m   FILE *f = fopen("text.txt", "a");
+    if ( argc == 2 ) {
+    printf("Dropping semaphore...\n");
+    if ( (sem = sem_open(SEM, 0)) == SEM_FAILED ) {
+   
+    return 1;
+    }
+    sem_post(sem);
+    
+    printf("Semaphore dropped.\n");
+    return 0;
+    }
 
-if (argc != 2) {
-  fprintf(stderr,"usage: progtest <integer value>\n");
-  return -1;
-}
+    if ( (sem = sem_open(SEM, O_CREAT, 0777, 0)) == SEM_FAILED ) {
+    log(f);
+    return 1;
+    }
 
-if (atoi(argv[1]) < 0) {
-  fprintf(stderr,"Аргумент %d не может быть отрицательным числом\n",atoi(argv[1]));
-  return -1;
-}
+    printf("Semaphore is taken.\nWaiting for it to be dropped.\n");
+    if (sem_wait(sem) < 0 )
+ 
+    if ( sem_close(sem) < 0 )
+  
+    return 0;
+    }
 
-
-  pthread_attr_init(&attr);
-
-
-  pthread_create(&tid,&attr,potok,argv[1]);
-
-
-  pthread_join(tid,NULL);
-  printf("count = %d\n",count);
-}
-
-
-void *potok(void *param) 
-{
-  int i, upper = atoi(param);
-  count = 0;
-
-  if (upper > 0) {
-    for (i = 1; i <= upper; i++)
-    count += i;
-  }
-
-  pthread_exit(0);
-}
